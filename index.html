@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>chrome://flags/#unsafely-treat-insecure-origin-as-secure</h1>
+    <div>
+      <h1>video 1</h1>
+      <audio controls autoplay id="audio-1"></audio>
+    </div>
+    <script src="https://unpkg.com/peerjs@1.4.6/dist/peerjs.min.js"></script>
+    <script>
+      const queryParams = new URLSearchParams(document.location.search);
+
+      const callAdress = queryParams.get("call");
+      const clientAddress = queryParams.get("client");
+
+      const auido1 = document.getElementById("audio-1");
+
+      var peer = new Peer(clientAddress);
+      console.log(clientAddress, peer);
+
+      peer.on("open", function (arg) {
+        console.log("opeee");
+      });
+
+      setTimeout(() => {
+        if (callAdress) {
+          console.log("araniyor");
+
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(
+            (stream) => {
+              console.log("arandi", callAdress);
+              const call = peer.call(callAdress, stream);
+              call.on("stream", (remoteStream) => {
+                auido1.srcObject = remoteStream;
+              });
+            },
+            (err) => {
+              console.error("Failed to get local stream", err);
+            }
+          );
+        }
+      }, 4000);
+
+      peer.on("call", (call) => {
+        console.log("GELDI");
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            console.log("actik");
+            call.answer(stream); // Answer the call with an A/V stream.
+            call.on("stream", (remoteStream) => {
+              auido1.srcObject = remoteStream;
+            });
+          })
+          .catch((err) => {
+            console.error("Failed to get local stream", err);
+          });
+      });
+    </script>
+  </body>
+</html>
